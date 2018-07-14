@@ -25,6 +25,8 @@ print qr.lower()
 cr = qr.upper()
 print(cr)
 
+
+
 #字符串拼接
 full_name = qr+" "+cr.lower()
 print (full_name)
