@@ -1,9 +1,10 @@
 /*eslint-disable*/
-var camera, scene, renderer;
-var geometry, material, mesh;
-var look_at = [0,0,0];
+let camera, scene, renderer;
+let geometry, material, mesh;
+let cam_front = new THREE.Vector3(0, 0, -1);
+let cam_right = new THREE.Vector3(-1, 0, 0);
 
-var mouse_control_ins = new mouse_control();
+const mouse_control_ins = new mouse_control();
 
 function mouse_control() {
     this.last_x = 0;
@@ -31,8 +32,34 @@ mouse_control.prototype.mouse_move = function(e) {
         camera.rotation.x += -delta_y * 0.01;
         camera.rotation.y += -delta_x * 0.01;
 
+        let front = new THREE.Vector3(0, 0, -1);
+        cam_front = front.applyQuaternion(camera.quaternion);
+        let right = new THREE.Vector3(-1, 0, 0);
+        cam_right = right.applyQuaternion(camera.quaternion);
+
+      //  console.log(cam_front, cam_right);
+
         this.last_x = e.clientX;
         this.last_y = e.clientY;
+    }
+}
+
+function key_down_handle(e) {
+    switch (e.code) {
+        case 'KeyW':
+            camera.position.add(cam_front);
+            break;
+        case 'KeyS':
+            camera.position.sub(cam_front);
+            break;
+        case 'KeyA':
+            camera.position.add(cam_right);
+            break;
+        case 'KeyD':
+            camera.position.sub(cam_right);
+            break;
+        default:
+            break;
     }
 }
 
@@ -40,7 +67,7 @@ init();
 animate();
 
 function init() {
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+    camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.01, 100);
     camera.position.z = 10;
     scene = new THREE.Scene();
 
@@ -72,35 +99,14 @@ function init() {
     init_input_management();
 }
 
-function key_down_handle(e) {
-    window.onkeydown = function(e) {
-        switch (e.code) {
-            case 'KeyW':
-                mesh.position.y += 1.0;
-                break;
-            case 'KeyS':
-                mesh.position.y -= 1.0;
-                break;
-            case 'KeyA':
-                mesh.position.x -= 1.0;
-                break;
-            case 'KeyD':
-                mesh.position.x += 1.0;
-                break;
-            default:
-                break;
-        }
-    }
-}
+
 
 
 function init_input_management() {
-    window.onkeydown = key_down_handle;
-    console.log(mouse_control_ins);
-
-    window.onmousedown = mouse_control_ins.mouse_down;
-    window.onmousemove = mouse_control_ins.mouse_move;
-    window.onmouseup = mouse_control_ins.mouse_up;
+    window.addEventListener("keydown", key_down_handle);
+    window.addEventListener("mousedown", mouse_control_ins.mouse_down);
+    window.addEventListener("mousemove", mouse_control_ins.mouse_move);
+    window.addEventListener("mouseup", mouse_control_ins.mouse_up);
 }
 
 
