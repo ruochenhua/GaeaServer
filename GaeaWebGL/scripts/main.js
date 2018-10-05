@@ -29,8 +29,16 @@ mouse_control.prototype.mouse_move = function(e) {
         var delta_x = e.clientX - this.last_x;
         var delta_y = e.clientY - this.last_y;
 
-        camera.rotation.x += -delta_y * 0.01;
-        camera.rotation.y += -delta_x * 0.01;
+//        camera.rotation.x += -delta_y * 0.01;
+//        camera.rotation.y += -delta_x * 0.01;
+//        camera.rotateX(-delta_y * 0.01);
+//        camera.rotateY(-delta_x * 0.01);
+        camera.rotateOnWorldAxis(cam_right, delta_y * 0.01);
+        camera.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -delta_x * 0.01);
+        //camera.quaternion.normalize();
+        //camera.rotation.z = 0;
+        console.log(camera.rotation, camera.quaternion);
+
 
         let front = new THREE.Vector3(0, 0, -1);
         cam_front = front.applyQuaternion(camera.quaternion);
@@ -70,7 +78,7 @@ function init() {
     scene = new THREE.Scene();
 
     geometry = new THREE.BoxGeometry(2, 4, 2);
-    var color = new THREE.Color("#7833aa");
+    var color = new THREE.Color("#3957aa");
     material = new THREE.MeshPhongMaterial({
         color: color.getHex(),
         specular: 0x00ff00,
@@ -79,7 +87,7 @@ function init() {
 
     mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
-    var light = new THREE.PointLight(0xFFFFFF, 1.5);
+    var light = new THREE.PointLight("#aa435d", 1.5);
     light.position.set(10, 0, 80);
     scene.add(light);
 
