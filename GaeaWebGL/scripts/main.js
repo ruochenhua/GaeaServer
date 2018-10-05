@@ -1,6 +1,6 @@
 /*eslint-disable*/
 let camera, scene, renderer;
-let geometry, material, mesh;
+let box_mesh, plane_mesh;
 let cam_front = new THREE.Vector3(0, 0, -1);
 let cam_right = new THREE.Vector3(-1, 0, 0);
 
@@ -29,16 +29,8 @@ mouse_control.prototype.mouse_move = function(e) {
         var delta_x = e.clientX - this.last_x;
         var delta_y = e.clientY - this.last_y;
 
-//        camera.rotation.x += -delta_y * 0.01;
-//        camera.rotation.y += -delta_x * 0.01;
-//        camera.rotateX(-delta_y * 0.01);
-//        camera.rotateY(-delta_x * 0.01);
         camera.rotateOnWorldAxis(cam_right, delta_y * 0.01);
         camera.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -delta_x * 0.01);
-        //camera.quaternion.normalize();
-        //camera.rotation.z = 0;
-        console.log(camera.rotation, camera.quaternion);
-
 
         let front = new THREE.Vector3(0, 0, -1);
         cam_front = front.applyQuaternion(camera.quaternion);
@@ -77,32 +69,51 @@ function init() {
     camera.position.z = 10;
     scene = new THREE.Scene();
 
-    geometry = new THREE.BoxGeometry(2, 4, 2);
-    var color = new THREE.Color("#3957aa");
-    material = new THREE.MeshPhongMaterial({
-        color: color.getHex(),
+    let box_geo = new THREE.BoxGeometry(2, 4, 2);
+    let box_mat = new THREE.MeshPhongMaterial({
+        color: "#27aa41",
         specular: 0x00ff00,
-        shinyness: 20
     });
 
-    mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
-    var light = new THREE.PointLight("#aa435d", 1.5);
-    light.position.set(10, 0, 80);
-    scene.add(light);
+    box_mesh = new THREE.Mesh(box_geo, box_mat);
+    box_mesh.castShadow = true;
+    box_mesh.receiveShadow = false;
+    scene.add(box_mesh);
 
-    var light = new THREE.PointLight(0xFFFFFF, 1.5);
-    light.position.set(25, 0, -80);
-    scene.add(light);
+    //plane
+    let plane_geo = new THREE.BoxGeometry(100, 1, 100);
+    let plane_mat = new THREE.MeshStandardMaterial({
+        color: "#d8cd0f",
+    });
+    plane_mesh = new THREE.Mesh(plane_geo, plane_mat);
+    plane_mesh.position.set(0, -3, 0);
+    plane_mesh.receiveShadow = true;
+   // plane_mesh.rotation.set(0, 90, 0);
+    scene.add(plane_mesh);
+
+    let p_light = new THREE.PointLight("#aa435d", 1, 100);
+    p_light.position.set(10, 20, 10);
+    p_light.castShadow = true;
+    scene.add(p_light);
+
+    let d_light = new THREE.DirectionalLight("#345671", 1, 100);
+    d_light.position.set(-1, 1, -1);
+    d_light.castShadow = true;
+    scene.add(d_light);
+
     renderer = new THREE.WebGLRenderer({
         antialias: true
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+
     document.body.appendChild(renderer.domElement);
 
 
     let grid_pos = new THREE.Vector3(0,0,0);
-    let grid_decs = new GridDesc(101,101,2,grid_pos);
+    let grid_decs = new GridDesc(11,11,2,grid_pos);
     let grid = grid_decs.CreateGrid();
 
     for(let i = 0; i < grid.length; ++i) {
@@ -124,7 +135,7 @@ function animate() {
 
     requestAnimationFrame(animate);
 
-    mesh.rotation.x += 0.01;
+    box_mesh.rotation.x += 0.01;
 
     renderer.render(scene, camera);
 }
