@@ -37,8 +37,6 @@ mouse_control.prototype.mouse_move = function(e) {
         let right = new THREE.Vector3(-1, 0, 0);
         cam_right = right.applyQuaternion(camera.quaternion);
 
-      //  console.log(cam_front, cam_right);
-
         this.last_x = e.clientX;
         this.last_y = e.clientY;
     }
@@ -67,7 +65,7 @@ init();
 animate();
 
 function init() {
-    camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.01, 100);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100);
     camera.position.z = 10;
     scene = new THREE.Scene();
 
@@ -78,7 +76,6 @@ function init() {
         specular: 0x00ff00,
         shinyness: 20
     });
-    //material = new THREE.MeshNormalMaterial();
 
     mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
@@ -96,11 +93,16 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
 
+    let grid_pos = new THREE.Vector3(0,0,0);
+    let grid_decs = new GridDesc(101,101,2,grid_pos);
+    let grid = grid_decs.CreateGrid();
+
+    for(let i = 0; i < grid.length; ++i) {
+        scene.add(grid[i]);
+    }
+
     init_input_management();
 }
-
-
-
 
 function init_input_management() {
     window.addEventListener("keydown", key_down_handle);
