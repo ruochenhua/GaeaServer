@@ -1,30 +1,41 @@
 /*eslint-disable*/
 let camera, scene, renderer;
 let plane_mesh, food_mesh;
+let food_pos = [0, 0];
+
+let snake_geo, snake_mat;
 let snake_mesh = [];
+let snake_grow = false;
 let snake_vel = [0, 0];
-let head_pos = [0, 0];
+let head_pos = [-10, -10];
 const speed = 0.05;
 init();
 animate();
 
 function init() {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100);
-    camera.position.set(0, 5, 5);
+    camera.position.set(0, 25, 5);
     camera.lookAt(new THREE.Vector3(0,0,0));
     scene = new THREE.Scene();
 
-    let box_geo = new THREE.BoxGeometry(1, 1, 1);
-    let box_mat = new THREE.MeshPhongMaterial({
+    snake_geo = new THREE.BoxGeometry(0.9, 1, 0.9);
+    snake_mat = new THREE.MeshPhongMaterial({
         color: "#27aa41",
         specular: 0x00ff00,
     });
 
-    let box_mesh = new THREE.Mesh(box_geo, box_mat);
-    box_mesh.castShadow = true;
-    box_mesh.receiveShadow = false;
-    scene.add(box_mesh);
-    snake_mesh.push(box_mesh);
+    let snake_mesh_part = new THREE.Mesh(snake_geo, snake_mat);
+    snake_mesh_part.castShadow = true;
+    snake_mesh_part.receiveShadow = false;
+    snake_mesh_part.position.set(-10, 0, -10);
+    scene.add(snake_mesh_part);
+    snake_mesh.push(snake_mesh_part);
+
+    //change the material for the rest of the snake
+    snake_mat = new THREE.MeshPhongMaterial({
+        color: "#34acaa",
+        specular: "#112311",
+    });
 
     let food_geo = new THREE.SphereGeometry(0.5);
     let food_mat = new THREE.MeshPhongMaterial({
@@ -33,7 +44,8 @@ function init() {
     });
 
     food_mesh = new THREE.Mesh(food_geo, food_mat);
-    food_mesh.position.set(0,0,0);
+
+    food_mesh.position.set(food_pos[0],0,food_pos[1]);
     food_mesh.castShadow = true;
     food_mesh.receiveShadow = false;
     scene.add(food_mesh);
@@ -90,7 +102,7 @@ function key_down_handle(e) {
         case "KeyA":
             snake_vel[0] = -speed;
             snake_vel[1] = 0;
-             break;
+             break;R
         case "KeyD":
             snake_vel[0] = speed;
             snake_vel[1] = 0;
@@ -101,8 +113,53 @@ function key_down_handle(e) {
 function update_snake_pos() {
     head_pos[0] += snake_vel[0];
     head_pos[1] += snake_vel[1];
-    snake_mesh[0].position.x = Math.floor(head_pos[0]);
-    snake_mesh[0].position.z = Math.floor(head_pos[1]);
+
+    let new_pos = [Math.floor(head_pos[0]), Math.floor(head_pos[1])];
+
+    //if new head position is the same as the old one, no need to update the position
+    let follow_pos = [snake_mesh[0].position.x, snake_mesh[0].position.z]
+    if(new_pos[0] === follow_pos[0] && new_pos[1] === follow_pos[1]) {
+        return;
+    }
+
+    snake_mesh[0].position.x = new_pos[0];
+    snake_mesh[0].position.z = new_pos[1];
+
+    for(let i = 1; i < snake_mesh.length; i++) {
+        //basically a swap operation
+        let old_pos = [snake_mesh[i].position.x, snake_mesh[i].position.z];
+        snake_mesh[i].position.x = follow_pos[0];
+        snake_mesh[i].position.z = follow_pos[1];
+        follow_pos[0] = old_pos[0];
+        follow_pos[1] = old_pos[1];
+    }
+
+    if(snake_grow) {
+        let snake_mesh_part = new THREE.Mesh(snake_geo, snake_mat);
+        snake_mesh_part.castShadow = true;
+        snake_mesh_part.receiveShadow = false;
+        snake_mesh_part.position.set(follow_pos[0], 0 , follow_pos[1]);
+        scene.add(snake_mesh_part);
+        snake_mesh.push(snake_mesh_part);
+        snake_grow = false;
+    }
+}
+
+
+function detect_hit() {
+    let snake_head = [snake_mesh[0].position.x, snake_mesh[0].position.z];
+    if(snake_head[0] === food_pos[0] && snake_head[1] === food_pos[1]) {
+        //grow snake
+        snake_grow = true;
+        //spaw new food
+        while(food_pos[0] === snake_head[0] && food_pos[1] === snake_head[1]) {
+            food_pos[0] = Math.round(Math.random() * 30 - 15);
+            food_pos[1] = Math.round(Math.random() * 30 - 15);
+        }
+
+        food_mesh.position.set(food_pos[0],0,food_pos[1]);
+        console.log("spaw new food", food_pos[0], food_pos[1]);
+    }
 }
 
 
@@ -113,4 +170,5 @@ function animate() {
     food_mesh.rotation.y += 0.01;
 
     update_snake_pos();
+    detect_hit();
 }
